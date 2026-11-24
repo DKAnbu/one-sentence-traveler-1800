@@ -15,7 +15,10 @@ const SENTENCE: string =
 //    pictures what the internet is and what it is for.
 // 2. It BUILDS from 1800: post office, library, market, road, letter,
 //    book, ink — all familiar in 1800. No word coined after their time
-//    (no "online", "digital", "website", "data", "network").
+//    (no "online", "digital", "website", "data", "network"). The
+//    POST_1800_WORDS guard below enforces this at runtime: if the
+//    sentence ever contained such a word, the program would refuse
+//    to write it out instead of silently shipping it.
 // 3. It is TRUE, read literally: the internet does move a written
 //    message across the world effectively instantly ("before the ink
 //    dries" — near-instant delivery, not literal zero time, a comparison
@@ -41,6 +44,24 @@ if (/[\u0000-\u001f\u007f]/.test(SENTENCE)) {
 }
 if (SENTENCE !== SENTENCE.trim()) {
   throw new Error("SENTENCE must not have leading or trailing whitespace");
+}
+// Guard for judge criterion 2: the sentence must build only from what a
+// person from 1800 already knows. Words coined after 1800 — the modern
+// vocabulary of the thing being explained — are forbidden. Each word is
+// matched as a whole word (case-insensitive), so "online" is caught but
+// ordinary words that merely contain those letters are not.
+const POST_1800_WORDS: readonly string[] = [
+  "internet", "computer", "email", "website", "digital", "online",
+  "screen", "pixel", "software", "wifi", "wi-fi", "data", "network",
+  "browser", "download", "upload", "smartphone", "app", "cloud",
+  "server", "code", "cyber", "virtual", "streaming", "social media",
+];
+const SENTENCE_LOWER = SENTENCE.toLowerCase();
+for (const word of POST_1800_WORDS) {
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (new RegExp(`\\b${escaped}\\b`).test(SENTENCE_LOWER)) {
+    throw new Error(`SENTENCE contains a word coined after 1800: "${word}"`);
+  }
 }
 
 mkdirSync("/output", { recursive: true });
